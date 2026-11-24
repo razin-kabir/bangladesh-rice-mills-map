@@ -1,0 +1,12 @@
+cff-version: 1.2.0
+message: "If you use these maps or this code, please cite them as below."
+title: "Bangladesh Rice Mills Map: surveyed rice mills from the 2018 Millers and Traders Survey (MATS)"
+type: software
+version: 1.0.0
+license: MIT
+repository-code: "https://github.com/razin-kabir/bangladesh-rice-mills-map"
+url: "https://razin-kabir.github.io/bangladesh-rice-mills-map/"
+authors:
+  - family-names: Kabir
+    given-names: Razin
+    affiliation: International Food Policy Research Institute (IFPRI)

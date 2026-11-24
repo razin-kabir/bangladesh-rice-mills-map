@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bangladesh Rice Mills Map</title>
+<meta name="description" content="Rice mills surveyed in the 2018 Bangladesh Millers and Traders Survey (MATS), counted per 20 km hexagon.">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
+      integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"
+        integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-1: #fcfcfb; --page: #f9f9f7;
+    --text-primary: #0b0b0b; --text-secondary: #52514e; --muted: #898781;
+    --hairline: #e1e0d9; --border: rgba(11,11,11,0.10); --land: #f0efec; --edge: #c3c2b7; --focus: #2a78d6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      color-scheme: dark;
+      --surface-1: #1a1a19; --page: #0d0d0d;
+      --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
+      --hairline: #2c2c2a; --border: rgba(255,255,255,0.10); --land: #232321; --edge: #383835; --focus: #3987e5;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-1: #1a1a19; --page: #0d0d0d;
+    --text-primary: #f0efec; --text-secondary: #c3c2b7; --muted: #898781;
+    --hairline: #2c2c2a; --border: rgba(255,255,255,0.10); --land: #232321; --edge: #383835; --focus: #3987e5;
+  }
+  html, body { height: 100%; margin: 0; background: var(--page); color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  #map { position: absolute; inset: 0; background: var(--page); }
+  .panel { position: absolute; top: 12px; right: 12px; z-index: 1000; width: 330px;
+    max-height: calc(100% - 24px); overflow: auto; box-sizing: border-box;
+    background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; font-size: 13px; line-height: 1.45; box-shadow: 0 2px 10px rgba(0,0,0,.10); }
+  .panel h1 { font-size: 16px; margin: 0 0 2px; }
+  .sub { margin: 0 0 12px; color: var(--text-secondary); }
+  .controls { display: grid; gap: 8px; margin-bottom: 12px; }
+  .controls label { display: grid; gap: 3px; color: var(--text-secondary); font-size: 12px; }
+  select, button { font: inherit; color: var(--text-primary); background: var(--surface-1);
+    border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; }
+  select:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
+  button { cursor: pointer; }
+  .legend-title { font-weight: 600; margin-bottom: 4px; }
+  .legend-row { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); margin: 2px 0; }
+  .sw { width: 22px; height: 12px; border-radius: 2px; flex: none; }
+  .sw.empty { border: 1px solid var(--muted); box-sizing: border-box; }
+  .note { color: var(--muted); font-size: 11.5px; margin: 12px 0 0; }
+  .table-wrap { margin-top: 10px; max-height: 300px; overflow: auto; border-top: 1px solid var(--hairline); }
+  table.cells { border-collapse: collapse; width: 100%; font-size: 11.5px; font-variant-numeric: tabular-nums; }
+  table.cells th, table.cells td { padding: 3px 4px; text-align: right; border-bottom: 1px solid var(--hairline); }
+  table.cells th:nth-child(2), table.cells td:nth-child(2) { text-align: left; }
+  table.cells th { position: sticky; top: 0; background: var(--surface-1); color: var(--text-secondary); font-weight: 600; }
+  .leaflet-tooltip.tip { background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border);
+    border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.15); padding: 8px 10px; font-size: 12.5px; }
+  .leaflet-tooltip.tip::before { display: none; }
+  .tt-h { color: var(--text-secondary); font-size: 11.5px; }
+  .tt-big { font-size: 15px; font-weight: 600; margin: 1px 0 6px; }
+  .tt table { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+  .tt th { text-align: left; font-weight: 600; color: var(--text-secondary); padding: 4px 0 1px; }
+  .tt td { padding: 0 0 0 0; } .tt td + td { text-align: right; padding-left: 14px; }
+  .leaflet-container { font: inherit; }
+  /* OpenStreetMap has no dark tiles: darken them in dark mode (hexagons are unaffected) */
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.82) contrast(0.92); }
+  }
+  :root[data-theme="dark"] .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(0.82) contrast(0.92); }
+  .leaflet-control-layers { background: var(--surface-1); color: var(--text-primary); border: 1px solid var(--border) !important; }
+  .leaflet-control-attribution { background: var(--surface-1) !important; color: var(--muted); }
+  .leaflet-control-attribution a { color: var(--text-secondary); }
+  @media (max-width: 640px) {
+    .panel { top: auto; bottom: 0; right: 0; left: 0; width: auto; max-height: 42%;
+      border-radius: 12px 12px 0 0; padding: 12px 16px; }
+  }
+</style>
+</head>
+<body>
+<div id="map" role="region" aria-label="Map of surveyed rice mills counted per hexagon"></div>
+<aside class="panel" aria-label="Map controls and legend">
+  <h1>Surveyed rice mills</h1>
+  <p class="sub" id="subtitle"></p>
+  <div class="controls">
+    <label>Show <select id="metric"></select></label>
+    <label>Division <select id="division"><option value="">All divisions</option></select></label>
+  </div>
+  <div id="legend" aria-live="polite"></div>
+  <p style="margin:12px 0 0"><button id="table-toggle" aria-expanded="false" aria-controls="table-wrap">Show table</button></p>
+  <div class="table-wrap" id="table-wrap" hidden></div>
+  <p class="note" id="note"></p>
+</aside>
+<script>
+const DATA = /*__DATA__*/null;
+(function () {
+  "use strict";
+  const S = DATA.summary;
+  const METRICS = [{ key: "n", label: "All mills", group: "total" }]
+    .concat(DATA.labels.types.map(([k, v]) => ({ key: k, label: v + "s", group: "part" })))
+    .concat(DATA.labels.ownership.map(([k, v]) => ({ key: k, label: "Ownership: " + v.toLowerCase(), group: "part" })));
+  const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const darkMQ = window.matchMedia("(prefers-color-scheme: dark)");
+  const mode = () => document.documentElement.dataset.theme || (darkMQ.matches ? "dark" : "light");
+  const fmt = (n) => n.toLocaleString("en-US");
+
+  function binLabels(b) {
+    return b.map((lo, i) => (i === b.length - 1 ? lo + "+" : (b[i + 1] - 1 === lo ? String(lo) : lo + "–" + (b[i + 1] - 1))));
+  }
+  function binIndex(v, b) { let i = -1; while (i + 1 < b.length && v >= b[i + 1]) i++; return i; }
+
+  // ── controls ────────────────────────────────────────────────────────────
+  const metricSel = document.getElementById("metric");
+  METRICS.forEach((m, i) => metricSel.add(new Option(m.label, String(i))));
+  const divSel = document.getElementById("division");
+  [...new Set(DATA.cells.features.map((f) => f.properties.division))].sort()
+    .forEach((d) => divSel.add(new Option(d, d)));
+  document.getElementById("subtitle").textContent =
+    "Bangladesh Millers and Traders Survey (MATS) 2018 · mills per " + S.hex_km + " km hexagon";
+  document.getElementById("note").textContent =
+    "To protect respondents, mills are counted in " + S.hex_km + " km hexagons and exact locations are never shown. " +
+    "Hexagons with fewer than " + S.min_mills + " surveyed mills are hidden (" + S.mills_hidden + " of " + S.mills + " mills). " +
+    "Median capacity is shown only for hexagons with at least " + S.min_mills_capacity + " mills, rounded to 2 significant figures. " +
+    (S.excluded_text ? S.excluded_text + " " : "") +
+    "Ownership is as first reported in each mill's history (not necessarily 2018). " +
+    "Sources: MATS 2018 (IFPRI); boundaries: Bangladesh Bureau of Statistics, 2022.";
+
+  // ── map ─────────────────────────────────────────────────────────────────
+  // Whole zoom levels only: raster tiles at fractional zoom show 1-px seams in Chrome
+  const map = L.map("map", { zoomSnap: 1, minZoom: 5, maxZoom: 12 });
+  map.attributionControl.addAttribution("Boundaries: BBS 2022 \u00b7 Data: MATS 2018 (IFPRI)");
+  // Basemap: OpenStreetMap tiles (no key needed; attribution required). "Plain" shows districts only.
+  const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  }).addTo(map);
+  const plain = L.layerGroup();
+  let basemap = "osm";
+  L.control.layers({ "OpenStreetMap": osm, "Plain (districts only)": plain }, null,
+                   { position: "topleft", collapsed: true }).addTo(map);
+  map.on("baselayerchange", (e) => { basemap = e.layer === osm ? "osm" : "plain"; styleBase(); render(); });
+  const panel = document.querySelector(".panel");
+  function fit() {   // keep Bangladesh clear of the control panel
+    const phone = window.matchMedia("(max-width: 640px)").matches;
+    map.fitBounds(DATA.bounds, phone
+      ? { paddingTopLeft: [8, 8], paddingBottomRight: [8, panel.offsetHeight + 8] }
+      : { paddingTopLeft: [16, 16], paddingBottomRight: [panel.offsetWidth + 28, 16] });
+  }
+  const mask = L.geoJSON(DATA.mask, { renderer: L.canvas({ padding: 0.5 }), interactive: false });
+  const districts = L.geoJSON(DATA.districts, { interactive: false });
+  const outline = L.geoJSON(DATA.outline, { interactive: false });
+  let cellLayer = null;
+  const fillOpacity = () => (basemap === "osm" ? 0.8 : 0.9);
+
+  function styleBase() {
+    const onOSM = basemap === "osm";
+    mask.setStyle({ stroke: false, fillColor: css("--page"), fillOpacity: onOSM ? 0.55 : 1 });
+    districts.setStyle(onOSM
+      ? { color: css("--text-secondary"), weight: 0.7, opacity: 0.45, fill: false }
+      : { color: css("--edge"), weight: 0.6, opacity: 1, fillColor: css("--land"), fillOpacity: 1 });
+    outline.setStyle({ color: css("--text-secondary"), weight: onOSM ? 1.6 : 1.2, opacity: 0.9, fill: false });
+  }
+  mask.addTo(map); districts.addTo(map); outline.addTo(map);
+
+  function cellStyle(f, metric) {
+    const v = f.properties[metric.key];
+    const i = binIndex(v, DATA.bins[metric.group]);
+    if (i < 0) return { color: css("--muted"), weight: 0.8, opacity: 0.9, fillColor: css("--surface-1"), fillOpacity: 0.25 };
+    return { color: css("--surface-1"), weight: 1, opacity: 1, fillColor: DATA.ramp[mode()][i], fillOpacity: fillOpacity() };
+  }
+
+  function tooltip(p) {
+    const rows = (labels) => labels
+      .map(([k, v]) => "<tr><td>" + esc(v) + "</td><td>" + p[k] + "</td></tr>").join("");
+    const cap = p.capacity == null
+      ? "not shown (fewer than " + S.min_mills_capacity + " mills)"
+      : "≈" + fmt(p.capacity) + " MT per fortnight";
+    return '<div class="tt"><div class="tt-h">Hexagon ' + p.id + " · " + esc(p.division) + " division</div>" +
+      '<div class="tt-big">' + p.n + " surveyed mills</div>" +
+      '<div class="tt-h" style="margin:-4px 0 6px">Overlaps: ' + esc(p.districts) + "</div><table>" +
+      '<tr><th colspan="2">Mill type (2018)</th></tr>' + rows(DATA.labels.types) +
+      '<tr><th colspan="2">Ownership (first reported)</th></tr>' + rows(DATA.labels.ownership) +
+      '<tr><th colspan="2">Median milling capacity</th></tr><tr><td colspan="2">' + cap + "</td></tr></table></div>";
+  }
+
+  function render() {
+    const metric = METRICS[Number(metricSel.value)];
+    const div = divSel.value;
+    if (cellLayer) map.removeLayer(cellLayer);
+    cellLayer = L.geoJSON(DATA.cells, {
+      filter: (f) => !div || f.properties.division === div,
+      style: (f) => cellStyle(f, metric),
+      onEachFeature: (f, layer) => {
+        layer.bindTooltip(tooltip(f.properties), { sticky: true, className: "tip", direction: "auto" });
+        layer.on("mouseover", () => { layer.setStyle({ weight: 2.5, color: css("--text-primary") }); layer.bringToFront(); });
+        layer.on("mouseout", () => layer.setStyle(cellStyle(f, metric)));
+      },
+    }).addTo(map);
+    renderLegend(metric);
+    renderTable(div);
+  }
+
+  function renderLegend(metric) {
+    const b = DATA.bins[metric.group], ramp = DATA.ramp[mode()];
+    let h = '<div class="legend-title">' + esc(metric.label) + " per hexagon</div>";
+    binLabels(b).forEach((l, i) => { h += '<div class="legend-row"><span class="sw" style="background:' + ramp[i] + ';opacity:' + fillOpacity() + '"></span>' + l + "</div>"; });
+    if (metric.group === "part") h += '<div class="legend-row"><span class="sw empty"></span>None of this kind</div>';
+    h += '<div class="legend-row"><span class="sw" style="background:transparent"></span>Blank: fewer than ' + S.min_mills + " mills in total</div>";
+    document.getElementById("legend").innerHTML = h;
+  }
+
+  function renderTable(div) {
+    const cols = [["id", "Hex", "Hexagon number"], ["division", "Division", "Division"], ["n", "Mills", "All surveyed mills"],
+                  ["husking", "Husk.", "Husking mills"], ["semi_auto", "Semi", "Semi-automatic mills"],
+                  ["automatic", "Auto", "Automatic mills"], ["capacity", "Cap.*", "Median milling capacity"]];
+    const rows = DATA.cells.features.map((f) => f.properties)
+      .filter((p) => !div || p.division === div)
+      .sort((a, b) => a.division.localeCompare(b.division) || a.id - b.id);
+    let h = '<table class="cells"><caption class="note" style="text-align:left;caption-side:top;margin:6px 0">' +
+      rows.length + " hexagons. *Median capacity, MT per fortnight (\u2014 = fewer than " + S.min_mills_capacity + " mills).</caption><thead><tr>" + cols.map((c) => '<th scope="col" title="' + c[2] + '"><abbr title="' + c[2] + '" style="text-decoration:none">' + c[1] + "</abbr></th>").join("") + "</tr></thead><tbody>";
+    rows.forEach((p) => {
+      h += "<tr>" + cols.map(([k]) => "<td>" + (p[k] == null ? "—" : esc(typeof p[k] === "number" ? fmt(p[k]) : p[k])) + "</td>").join("") + "</tr>";
+    });
+    document.getElementById("table-wrap").innerHTML = h + "</tbody></table>";
+  }
+
+  const toggle = document.getElementById("table-toggle");
+  toggle.addEventListener("click", () => {
+    const wrap = document.getElementById("table-wrap");
+    wrap.hidden = !wrap.hidden;
+    toggle.setAttribute("aria-expanded", String(!wrap.hidden));
+    toggle.textContent = wrap.hidden ? "Show table" : "Hide table";
+  });
+  metricSel.addEventListener("change", render);
+  divSel.addEventListener("change", render);
+  darkMQ.addEventListener("change", () => { styleBase(); render(); });
+
+  styleBase();
+  render();
+  fit();
+  let resizeTimer;
+  window.addEventListener("resize", () => { clearTimeout(resizeTimer); resizeTimer = setTimeout(fit, 150); });
+})();
+</script>
+</body>
+</html>

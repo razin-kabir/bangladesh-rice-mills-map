@@ -1,0 +1,41 @@
+# ── Survey microdata and boundary files are NEVER committed (see data/README.md)
+data/*
+!data/README.md
+!data/checksums.sha256
+*.dta
+*.Rdata
+*.rdata
+*.rds
+*.sav
+*.csv
+*.tsv
+*.xls
+*.xlsx
+*.parquet
+*.feather
+*.pkl
+*.shp
+*.shx
+*.dbf
+*.prj
+*.cpg
+*.sbn
+*.sbx
+*.gpkg
+*.geojson
+*.kml
+*.kmz
+
+# ── Executed notebooks and other build output
+build/
+.ipynb_checkpoints/
+
+# ── Python
+__pycache__/
+*.py[oc]
+.venv/
+
+# ── OS / editor
+.DS_Store
+Thumbs.db
+.vscode/

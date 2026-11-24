@@ -5,6 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bangladesh Rice Mills Map</title>
 <meta name="description" content="Rice mills surveyed in the 2018 Bangladesh Millers and Traders Survey (MATS), counted per 20 km hexagon.">
+<script>
+  // Saved theme choice (this browser only); no saved choice = follow the device setting
+  try {
+    const t = localStorage.getItem("rice-mills-theme");
+    if (t === "light" || t === "dark") document.documentElement.dataset.theme = t;
+  } catch (e) {}
+</script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"
       integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"
@@ -45,6 +52,12 @@
     border: 1px solid var(--border); border-radius: 6px; padding: 5px 8px; }
   select:focus-visible, button:focus-visible { outline: 2px solid var(--focus); outline-offset: 1px; }
   button { cursor: pointer; }
+  .theme-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--text-secondary); font-size: 12px; }
+  .seg { display: inline-flex; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+  .seg button { border: 0; border-radius: 0; padding: 4px 10px; font-size: 12px; background: var(--surface-1); color: var(--text-secondary); }
+  .seg button + button { border-left: 1px solid var(--border); }
+  .seg button[aria-pressed="true"] { background: var(--text-primary); color: var(--surface-1); font-weight: 600; }
+  .seg button:focus-visible { outline-offset: -2px; }
   .legend-title { font-weight: 600; margin-bottom: 4px; }
   .legend-row { display: flex; align-items: center; gap: 8px; color: var(--text-secondary); margin: 2px 0; }
   .sw { width: 22px; height: 12px; border-radius: 2px; flex: none; }
@@ -86,6 +99,13 @@
   <div class="controls">
     <label>Show <select id="metric"></select></label>
     <label>Division <select id="division"><option value="">All divisions</option></select></label>
+    <div class="theme-row"><span id="theme-label">Theme</span>
+      <div class="seg" role="group" aria-labelledby="theme-label">
+        <button type="button" data-theme-choice="auto" title="Follow your device's light/dark setting">Auto</button>
+        <button type="button" data-theme-choice="light">Light</button>
+        <button type="button" data-theme-choice="dark">Dark</button>
+      </div>
+    </div>
   </div>
   <div id="legend" aria-live="polite"></div>
   <p style="margin:12px 0 0"><button id="table-toggle" aria-expanded="false" aria-controls="table-wrap">Show table</button></p>
@@ -236,6 +256,26 @@ const DATA = /*__DATA__*/null;
   metricSel.addEventListener("change", render);
   divSel.addEventListener("change", render);
   darkMQ.addEventListener("change", () => { styleBase(); render(); });
+
+  // Manual theme switch: Auto follows the device; Light/Dark are remembered in this browser
+  const THEME_KEY = "rice-mills-theme";
+  const themeButtons = document.querySelectorAll("[data-theme-choice]");
+  function markTheme(choice) {
+    themeButtons.forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.themeChoice === choice)));
+  }
+  function setTheme(choice) {
+    if (choice === "auto") delete document.documentElement.dataset.theme;
+    else document.documentElement.dataset.theme = choice;
+    try {
+      if (choice === "auto") localStorage.removeItem(THEME_KEY);
+      else localStorage.setItem(THEME_KEY, choice);
+    } catch (e) {}
+    markTheme(choice);
+    styleBase();
+    render();
+  }
+  themeButtons.forEach((b) => b.addEventListener("click", () => setTheme(b.dataset.themeChoice)));
+  markTheme(document.documentElement.dataset.theme || "auto");
 
   styleBase();
   render();

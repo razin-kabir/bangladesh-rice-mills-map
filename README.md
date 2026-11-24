@@ -19,7 +19,8 @@ Exact mill locations are confidential, so mills are counted in **hexagons 20 km 
 
 The interactive map can show all mills, each mill type (husking, semi-automatic, automatic) or
 each ownership type over an OpenStreetMap basemap (or a plain district view). It can be filtered
-by division and has a table view. A by-type version of
+by division, has a table view, and follows the device's light/dark setting unless you pick one
+with its theme switch. A by-type version of
 the printable map is in [`figures/`](figures/rice_mills_hexmap_by_type.png).
 
 **Notes on the variables.**

@@ -31,9 +31,11 @@ OWNERSHIP = {"own_sole": "Sole ownership", "own_partners": "Owned by partners",
 # Survey spellings -> BBS 2022 spellings used by the boundary file
 DIVISION_NAMES = {"Barisal": "Barishal", "Chittagong": "Chattogram"}
 
-# Sequential blue ramp (dataviz reference palette), light and dark steps
-RAMP_LIGHT = ["#86b6ef", "#5598e7", "#2a78d6", "#1c5cab", "#104281"]
-RAMP_DARK = ["#184f95", "#256abf", "#3987e5", "#6da7ec", "#b7d3f6"]
+# Viridis, reversed so that lighter = fewer mills and darker = more, in BOTH themes.
+# Sampled at 0.93, 0.72, 0.50, 0.30, 0.12: trimming the extremes keeps the lightest
+# step visible on light maps and the darkest on dark maps (hexagons are also outlined).
+RAMP = ["#d2e21b", "#4ec36b", "#21918c", "#355f8d", "#472a7a"]
+RAMP_LIGHT = RAMP_DARK = RAMP
 BINS_TOTAL = [3, 5, 7, 10, 15]     # all mills: 3-4, 5-6, 7-9, 10-14, 15+
 BINS_PART = [1, 2, 4, 7, 10]       # one type/ownership: 1, 2-3, 4-6, 7-9, 10+
 INK = {"primary": "#0b0b0b", "secondary": "#52514e", "muted": "#898781",
@@ -268,8 +270,8 @@ def _base(ax, districts, country):
 def _hexes(ax, cells, column, bins):
     cols = _colors(cells[column].to_numpy(), bins)
     shown = [c is not None for c in cols]
-    cells[shown].plot(ax=ax, color=[c for c in cols if c], edgecolor=INK["surface"],
-                      linewidth=0.8, zorder=3)
+    cells[shown].plot(ax=ax, color=[c for c in cols if c], edgecolor=INK["secondary"],
+                      linewidth=0.45, zorder=3)
     empty = cells[[not s for s in shown]]
     if len(empty):
         empty.plot(ax=ax, facecolor="none", edgecolor=INK["muted"], linewidth=0.5, zorder=3)
